@@ -25,15 +25,16 @@ app.post('/survey', async (req, res) => {
     // Create a Nodemailer transporter
     const auth = {
         auth: {
-            api_key: 'key-59bf2691d6ffe4886f7599fe05e012aa',
-            domain: 'sandboxd67c630cd295490680338e44ad69057a.mailgun.org'
-        }
-    };
+          api_key: 'key-59bf2691d6ffe4886f7599fe05e012aa',
+          domain: 'survey.reformedlife.in'
+        },
+        host: 'api.mailgun.net',
+      };
     const transporter = nodemailer.createTransport(mg(auth));
 
     // Set up email data
     let mailOptions = {
-        from: 'ajayforchrist777@gmail.com',
+        from: 'surveylist@m.daramajay.com',
         to: 'ajayforchrist777@gmail.com',
         subject: 'Hello from Nodemailer',
         text: 'Please find the survey data attached as a PDF',
@@ -55,13 +56,14 @@ app.post('/survey', async (req, res) => {
         }
     });
 });
-//other routes
+
+// Serve the React app for all other routes
 app.get('*', (req, res) => {
-    res.sendFile(path.resolvedirname(__, 'public', 'index.html'));
+    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
-console.log(`Server running at http://localhost:${port}/`);
+    console.log(`Server running at http://localhost:${port}/`);
 });
 
 async function generatePdf(data) {
@@ -81,14 +83,15 @@ async function generatePdf(data) {
 }
 
 function generateHtml(data) {
-    // Generate the HTML content based on the survey data
-    // You can use a templating engine like Handlebars or EJS to generate dynamic HTML
-    // Here's a simple example using string concatenation:
     let html = '<html><body>';
     html += '<h1>Survey Data</h1>';
     html += '<ul>';
     for (const key in data) {
-        html += `<li>${key}: ${data[key]}</li>`;
+        let value = data[key];
+        if (typeof value === 'object') {
+            value = JSON.stringify(value);
+        }
+        html += `<li>${key}: ${value}</li>`;
     }
     html += '</ul>';
     html += '</body></html>';
