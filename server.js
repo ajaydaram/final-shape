@@ -3,6 +3,8 @@ const cors = require('cors');
 const puppeteer = require('puppeteer');
 const nodemailer = require('nodemailer');
 const path = require('path');
+const mg = require('nodemailer-mailgun-transport');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,17 +23,17 @@ app.post('/survey', async (req, res) => {
     const pdfBuffer = await generatePdf(surveyData);
 
     // Create a Nodemailer transporter
-    let transporter = nodemailer.createTransport({
-        service: 'Gmail',
+    const auth = {
         auth: {
-            user: 'kumarbandaru978@gmail.com',
-            pass: 'ehxhcqmadrmlcgze'
+            api_key: 'key-59bf2691d6ffe4886f7599fe05e012aa',
+            domain: 'sandboxd67c630cd295490680338e44ad69057a.mailgun.org'
         }
-    });
+    };
+    const transporter = nodemailer.createTransport(mg(auth));
 
     // Set up email data
     let mailOptions = {
-        from: 'kumarbandaru978@gmail.com',
+        from: 'ajayforchrist777@gmail.com',
         to: 'ajayforchrist777@gmail.com',
         subject: 'Hello from Nodemailer',
         text: 'Please find the survey data attached as a PDF',
@@ -42,7 +44,6 @@ app.post('/survey', async (req, res) => {
             }
         ]
     };
-
     // Send the email
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
@@ -54,12 +55,13 @@ app.post('/survey', async (req, res) => {
         }
     });
 });
-
-// Serve the React app on all other routes
-app.get('*', (req, res) => {res.sendFile(path.resolve(__dirname, 'public', 'index.html'));});
+//other routes
+app.get('*', (req, res) => {
+    res.sendFile(path.resolvedirname(__, 'public', 'index.html'));
+});
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+console.log(`Server running at http://localhost:${port}/`);
 });
 
 async function generatePdf(data) {
