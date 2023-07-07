@@ -34,8 +34,8 @@ app.post('/survey', async (req, res) => {
 
     // Set up email data
     let mailOptions = {
-        from: 'surveylist@m.daramajay.com',
-        to: 'ajayforchrist777@gmail.com',
+        from: 'calvary@daramajay.com',
+        to: 'calvary@daramajay.com',
         subject: 'Hello from Nodemailer',
         text: 'Please find the survey data attached as a PDF',
         attachments: [
