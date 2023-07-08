@@ -1,100 +1,85 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const puppeteer = require('puppeteer');
 const nodemailer = require('nodemailer');
 const path = require('path');
-const mg = require('nodemailer-mailgun-transport');
-
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable CORS for all routes
 app.use(cors());
-app.use(express.json()); // Add this line to parse JSON data in the request body
-
-// Serve static files from the React app
+app.use(express.json());
 app.use(express.static('public'));
 
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 app.post('/survey', async (req, res) => {
-    const surveyData = req.body;
+  const surveyData = req.body;
 
-    // Generate a PDF from the survey data
-    const pdfBuffer = await generatePdf(surveyData);
+  const pdfBuffer = await generatePdf(surveyData);
 
-    // Create a Nodemailer transporter
-    const auth = {
-        auth: {
-          api_key: 'key-59bf2691d6ffe4886f7599fe05e012aa',
-          domain: 'survey.reformedlife.in'
-        },
-        host: 'api.mailgun.net',
-      };
-    const transporter = nodemailer.createTransport(mg(auth));
+  const emailData = {
+    from: 'calvary@daramajay.com',
+    to: 'calvary@daramajay.com',
+    subject: 'Hello from Nodemailer',
+    text: 'Please find the survey data attached as a PDF',
+    attachments: [
+      {
+        filename: 'survey.pdf',
+        content: pdfBuffer.toString('base64'), // Convert the PDF buffer to base64 string
+        type: 'application/pdf', // Add the MIME type of the attachment
+        disposition: 'attachment', // Specify the attachment disposition
+      },
+    ],
+  };
 
-    // Set up email data
-    let mailOptions = {
-        from: 'calvary@daramajay.com',
-        to: 'calvary@daramajay.com',
-        subject: 'Hello from Nodemailer',
-        text: 'Please find the survey data attached as a PDF',
-        attachments: [
-            {
-                filename: 'survey.pdf',
-                content: pdfBuffer
-            }
-        ]
-    };
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.log(error);
-            res.status(500).send('Error sending email');
-        } else {
-            console.log('Email sent: ' + info.response);
-            res.send('Email sent successfully');
-        }
-    });
+  try {
+    await sgMail.send(emailData);
+    console.log('Email sent successfully');
+    res.send('Email sent successfully');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error sending email');
+  }
 });
 
-// Serve the React app for all other routes
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+  console.log(`Server running at http://localhost:${port}/`);
 });
 
 async function generatePdf(data) {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
 
-    // Generate HTML content from the survey data
-    const htmlContent = generateHtml(data);
+  const htmlContent = generateHtml(data);
 
-    // Set the HTML content and generate PDF
-    await page.setContent(htmlContent);
-    const pdfBuffer = await page.pdf();
+  await page.setContent(htmlContent);
+  const pdfBuffer = await page.pdf();
 
-    await browser.close();
+  await browser.close();
 
-    return pdfBuffer;
+  return pdfBuffer;
 }
 
 function generateHtml(data) {
-    let html = '<html><body>';
-    html += '<h1>Survey Data</h1>';
-    html += '<ul>';
-    for (const key in data) {
-        let value = data[key];
-        if (typeof value === 'object') {
-            value = JSON.stringify(value);
-        }
-        html += `<li>${key}: ${value}</li>`;
+  let html = '<html><body>';
+  html += '<h1>Survey Data</h1>';
+  html += '<ul>';
+  for (const key in data) {
+    let value = data[key];
+    if (typeof value === 'object') {
+      value = JSON.stringify(value);
     }
-    html += '</ul>';
-    html += '</body></html>';
+    html += `<li>${key}: ${value}</li>`;
+  }
+  html += '</ul>';
+  html += '</body></html>';
 
-    return html;
+  return html;
 }
