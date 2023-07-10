@@ -15,7 +15,7 @@ app.use(express.static('public'));
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-app.post('/survey', async (req, res) => {
+app.post('survey', async (req, res) => {
   const surveyData = req.body;
 
   const pdfBuffer = await generatePdf(surveyData);
